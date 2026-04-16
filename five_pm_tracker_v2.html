@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>5PM Tracker</title>
+<style>
+    body {
+        margin: 0;
+        background: transparent;
+        color: white;
+        font-family: Arial, sans-serif;
+        text-align: center;
+    }
+    #container {
+        font-size: 48px;
+        font-weight: bold;
+    }
+    #location {
+        font-size: 28px;
+        margin-top: 10px;
+    }
+    #countdown {
+        font-size: 24px;
+        margin-top: 5px;
+    }
+    #top3 {
+        font-size: 18px;
+        margin-top: 10px;
+        white-space: pre-line;
+    }
+</style>
+</head>
+<body>
+
+<div id="container">
+    <div id="time">Loading...</div>
+    <div id="location"></div>
+    <div id="countdown"></div>
+    <div id="top3"></div>
+</div>
+
+<script>
+
+//  FULL timezone list
+const rawTimeZones = `
+Europe/Madrid
+America/Port-au-Prince
+Pacific/Saipan
+America/Cordoba
+America/Creston
+Pacific/Port_Moresby
+America/Guadeloupe
+Etc/GMT-7
+US/Hawaii
+Kwajalein
+America/Sitka
+Antarctica/Mawson
+America/Glace_Bay
+Asia/Bishkek
+Asia/Amman
+Etc/Universal
+Asia/Baku
+US/Arizona
+America/Argentina/Tucuman
+America/Goose_Bay
+Africa/Tripoli
+America/Asuncion
+Africa/Niamey
+Asia/Hong_Kong
+Asia/Kabul
+Asia/Tehran
+America/Adak
+America/Indiana/Vincennes
+America/Yellowknife
+America/Los_Angeles
+America/Pangnirtung
+GMT0
+America/Yakutat
+America/Dawson_Creek
+America/Atikokan
+Pacific/Apia
+Europe/Budapest
+Etc/GMT-2
+America/Argentina/Cordoba
+Africa/Lome
+Asia/Yangon
+Pacific/Tahiti
+Asia/Muscat
+America/Noronha
+Etc/GMT-8
+America/Chicago
+Africa/Tunis
+Africa/Nouakchott
+America/Havana
+Australia/Sydney
+Europe/Lisbon
+America/Vancouver
+Etc/GMT+8
+America/Argentina/San_Luis
+Asia/Jakarta
+America/Cayenne
+Iran
+Australia/Yancowinna
+America/Argentina/Jujuy
+America/Knox_IN
+America/Antigua
+Asia/Srednekolymsk
+Etc/GMT+1
+GMT
+Asia/Taipei
+Antarctica/Davis
+America/Indiana/Winamac
+America/Mendoza
+America/Inuvik
+Pacific/Pohnpei
+Africa/Bangui
+Africa/Juba
+Asia/Ho_Chi_Minh
+Asia/Atyrau
+Europe/Kyiv
+America/Cayman
+Jamaica
+America/Barbados
+Pacific/Midway
+Pacific/Samoa
+Asia/Novosibirsk
+Europe/San_Marino
+Pacific/Pago_Pago
+America/St_Vincent
+Europe/Uzhgorod
+America/Costa_Rica
+Etc/GMT+12
+America/Scoresbysund
+CET
+America/Marigot
+Europe/Bucharest
+America/Lima
+America/Ciudad_Juarez
+US/Samoa
+Pacific/Niue
+Europe/Gibraltar
+US/East-Indiana
+Europe/Vienna
+America/Jujuy
+Europe/Minsk
+Pacific/Majuro
+America/Lower_Princes
+Asia/Seoul
+Asia/Nicosia
+America/Winnipeg
+Asia/Oral
+Asia/Brunei
+Asia/Ashkhabad
+Europe/Tirane
+Europe/Moscow
+Etc/GMT+4
+Asia/Bahrain
+America/Guyana
+America/Santo_Domingo
+Asia/Yakutsk
+MST7MDT
+America/Atka
+Asia/Chongqing
+America/Kentucky/Louisville
+Indian/Comoro
+America/North_Dakota/Center
+Pacific/Enderbury
+UTC
+Australia/Eucla
+Africa/Asmara
+America/Godthab
+HST
+America/Santarem
+US/Michigan
+Africa/Banjul
+Etc/GMT+5
+America/Jamaica
+Pacific/Fiji
+America/Miquelon
+America/Detroit
+Europe/Mariehamn
+Africa/Timbuktu
+Europe/Guernsey
+America/Rio_Branco
+America/Indiana/Petersburg
+America/St_Thomas
+Africa/El_Aaiun
+Africa/Lubumbashi
+Etc/GMT-14
+Antarctica/Rothera
+Africa/Maputo
+America/Hermosillo
+PST8PDT
+Antarctica/South_Pole
+America/Tortola
+Europe/Belfast
+Africa/Bissau
+Asia/Riyadh
+Pacific/Kiritimati
+Pacific/Wallis
+Australia/Queensland
+Etc/Greenwich
+Asia/Chungking
+ROK
+America/Cambridge_Bay
+US/Pacific
+America/Boa_Vista
+America/Anchorage
+America/Tijuana
+Antarctica/Palmer
+Australia/Melbourne
+America/Araguaina
+Asia/Singapore
+America/Thule
+America/Curacao
+US/Indiana-Starke
+Africa/Libreville
+Asia/Ashgabat
+America/Indiana/Vevay
+Europe/Vilnius
+America/Indianapolis
+Europe/Zaporozhye
+America/Cancun
+Australia/Lindeman
+Asia/Kathmandu
+Asia/Chita
+Etc/GMT+2
+Pacific/Guadalcanal
+Asia/Ujung_Pandang
+Indian/Christmas
+Pacific/Fakaofo
+Europe/Warsaw
+Japan
+Asia/Jayapura
+Asia/Jerusalem
+Asia/Damascus
+US/Alaska
+Atlantic/Faroe
+America/Monterrey
+Pacific/Easter
+Africa/Cairo
+America/St_Johns
+Europe/Zurich
+Europe/Dublin
+Brazil/DeNoronha
+America/Kralendijk
+America/Nipigon
+Turkey
+Pacific/Pitcairn
+Asia/Bangkok
+Pacific/Honolulu
+Canada/Mountain
+Etc/GMT-3
+Asia/Qostanay
+Asia/Manila
+Africa/Mbabane
+Etc/GMT
+PRC
+Europe/Luxembourg
+Etc/GMT+6
+Asia/Pyongyang
+Brazil/East
+America/Matamoros
+America/Dominica
+Europe/Zagreb
+Navajo
+America/Regina
+Pacific/Tarawa
+Australia/North
+Asia/Tel_Aviv
+Europe/Belgrade
+Etc/GMT+0
+America/Puerto_Rico
+Canada/Saskatchewan
+Europe/Busingen
+Asia/Magadan
+Asia/Kuching
+Antarctica/Troll
+Pacific/Wake
+Asia/Irkutsk
+Asia/Katmandu
+Universal
+Africa/Ceuta
+Antarctica/Macquarie
+America/Caracas
+America/Nassau
+America/Bahia_Banderas
+Brazil/West
+America/Porto_Velho
+Europe/Sofia
+Pacific/Efate
+America/Argentina/Mendoza
+Chile/Continental
+America/Blanc-Sablon
+Europe/Oslo
+ROC
+Portugal
+Asia/Sakhalin
+Europe/Kirov
+Etc/GMT0
+America/Shiprock
+Asia/Kashgar
+America/Belize
+Chile/EasterIsland
+Pacific/Chatham
+America/Whitehorse
+Europe/Copenhagen
+W-SU
+Europe/Helsinki
+Europe/Ljubljana
+Asia/Calcutta
+America/Aruba
+Pacific/Guam
+Europe/Tallinn
+America/Sao_Paulo
+Europe/Chisinau
+America/Porto_Acre
+America/Santiago
+Pacific/Ponape
+Europe/Samara
+America/Managua
+Etc/GMT-9
+America/Anguilla
+US/Mountain
+America/Halifax
+Atlantic/South_Georgia
+America/Nome
+Asia/Krasnoyarsk
+Antarctica/Vostok
+Singapore
+Africa/Lagos
+Pacific/Palau
+Cuba
+America/Argentina/Salta
+Asia/Vladivostok
+Asia/Famagusta
+America/Martinique
+Africa/Harare
+America/Maceio
+Europe/Istanbul
+NZ-CHAT
+America/Argentina/Catamarca
+Australia/Currie
+America/Fort_Wayne
+Australia/West
+America/Toronto
+Africa/Bamako
+Asia/Barnaul
+America/Port_of_Spain
+Europe/Paris
+Hongkong
+Etc/GMT-0
+Canada/Pacific
+America/Grenada
+Iceland
+Etc/GMT-6
+Africa/Mogadishu
+America/Moncton
+Pacific/Kwajalein
+Asia/Yerevan
+GMT-0
+America/Argentina/ComodRivadavia
+Europe/Kaliningrad
+Europe/Bratislava
+Asia/Colombo
+Africa/Addis_Ababa
+America/Phoenix
+America/Thunder_Bay
+America/Tegucigalpa
+Etc/GMT-4
+Etc/GMT+9
+Asia/Rangoon
+America/Juneau
+Mexico/BajaNorte
+America/Menominee
+Africa/Conakry
+Canada/Eastern
+Africa/Asmera
+Africa/Malabo
+Africa/Casablanca
+America/Argentina/Buenos_Aires
+Mexico/General
+Europe/Amsterdam
+Etc/GMT-1
+Asia/Dili
+Europe/Volgograd
+Asia/Makassar
+America/Buenos_Aires
+Asia/Novokuznetsk
+Atlantic/Canary
+NZ
+America/Indiana/Knox
+America/St_Barthelemy
+America/North_Dakota/New_Salem
+Europe/London
+Asia/Baghdad
+America/Rankin_Inlet
+Pacific/Kosrae
+Etc/GMT-13
+Africa/Blantyre
+Africa/Kinshasa
+America/New_York
+America/Nuuk
+Egypt
+America/Fort_Nelson
+Pacific/Noumea
+Poland
+Pacific/Auckland
+Africa/Bujumbura
+America/Recife
+Africa/Brazzaville
+Pacific/Funafuti
+Australia/Lord_Howe
+Asia/Karachi
+Asia/Macau
+Indian/Antananarivo
+Asia/Hebron
+America/Kentucky/Monticello
+America/Indiana/Tell_City
+Europe/Sarajevo
+Asia/Kamchatka
+WET
+Indian/Maldives
+America/Campo_Grande
+Asia/Khandyga
+Africa/Kampala
+America/Iqaluit
+America/Swift_Current
+Europe/Athens
+America/Fortaleza
+Etc/GMT+10
+Pacific/Chuuk
+Australia/Brisbane
+Etc/UCT
+Pacific/Truk
+Australia/ACT
+America/Denver
+Africa/Dakar
+Asia/Thimbu
+Asia/Ulaanbaatar
+Pacific/Rarotonga
+Africa/Djibouti
+Etc/GMT+11
+localtime
+Arctic/Longyearbyen
+Asia/Aqtau
+Indian/Chagos
+Asia/Harbin
+Asia/Yekaterinburg
+Asia/Qyzylorda
+Canada/Yukon
+GB-Eire
+Europe/Isle_of_Man
+Africa/Accra
+America/Dawson
+America/Cuiaba
+UCT
+Asia/Tomsk
+Africa/Sao_Tome
+Asia/Choibalsan
+GMT+0
+America/Chihuahua
+America/Resolute
+Antarctica/Casey
+America/Argentina/La_Rioja
+Asia/Vientiane
+Australia/Hobart
+Asia/Thimphu
+America/Danmarkshavn
+Africa/Ndjamena
+America/Edmonton
+US/Aleutian
+Asia/Dubai
+Etc/UTC
+Europe/Vatican
+Africa/Ouagadougou
+Europe/Tiraspol
+Canada/Newfoundland
+America/Guayaquil
+America/St_Lucia
+America/La_Paz
+Mexico/BajaSur
+America/Coral_Harbour
+Europe/Rome
+Etc/GMT+3
+Asia/Macao
+Pacific/Nauru
+Asia/Pontianak
+Atlantic/Azores
+America/Guatemala
+America/St_Kitts
+Atlantic/Madeira
+Canada/Atlantic
+America/Rainy_River
+Europe/Berlin
+Etc/GMT-11
+Libya
+Australia/Perth
+Asia/Phnom_Penh
+America/Paramaribo
+America/Argentina/San_Juan
+Asia/Kuala_Lumpur
+Africa/Porto-Novo
+America/Punta_Arenas
+Australia/Canberra
+Etc/Zulu
+Australia/Victoria
+Indian/Cocos
+Atlantic/Faeroe
+Pacific/Gambier
+Africa/Khartoum
+America/Metlakatla
+Africa/Windhoek
+Asia/Istanbul
+Etc/GMT-10
+Asia/Gaza
+America/Louisville
+America/Montevideo
+Factory
+Africa/Nairobi
+America/Virgin
+America/Ojinaga
+EST5EDT
+America/Indiana/Marengo
+America/North_Dakota/Beulah
+Pacific/Johnston
+Europe/Andorra
+Africa/Lusaka
+America/Argentina/Rio_Gallegos
+America/Manaus
+Europe/Brussels
+Atlantic/Jan_Mayen
+America/Belem
+Europe/Prague
+Europe/Ulyanovsk
+Pacific/Norfolk
+Europe/Skopje
+Pacific/Marquesas
+Pacific/Yap
+Asia/Beirut
+Asia/Almaty
+America/El_Salvador
+Pacific/Tongatapu
+Zulu
+Australia/South
+Etc/GMT-12
+Asia/Shanghai
+Asia/Ust-Nera
+EET
+Antarctica/McMurdo
+Asia/Tokyo
+America/Rosario
+Eire
+Africa/Freetown
+GB
+Africa/Gaborone
+US/Eastern
+Asia/Aden
+Atlantic/Stanley
+Etc/GMT-5
+CST6CDT
+Asia/Tashkent
+Asia/Kolkata
+Pacific/Galapagos
+America/Argentina/Ushuaia
+Asia/Dushanbe
+Africa/Dar_es_Salaam
+Asia/Saigon
+MET
+Asia/Dacca
+Europe/Jersey
+Africa/Luanda
+Australia/NSW
+Indian/Mahe
+Asia/Qatar
+Europe/Podgorica
+Europe/Saratov
+Africa/Monrovia
+Israel
+Indian/Reunion
+Asia/Hovd
+Brazil/Acre
+America/Indiana/Indianapolis
+America/Santa_Isabel
+America/Eirunepe
+Africa/Algiers
+Australia/Adelaide
+America/Montserrat
+Etc/GMT+7
+Europe/Vaduz
+America/Boise
+Asia/Tbilisi
+Indian/Mayotte
+Africa/Douala
+Europe/Kiev
+Asia/Omsk
+Asia/Anadyr
+Australia/Darwin
+Atlantic/Bermuda
+Australia/Broken_Hill
+Africa/Maseru
+Asia/Ulan_Bator
+Africa/Abidjan
+America/Grand_Turk
+MST
+America/Bogota
+Australia/Tasmania
+Europe/Malta
+Asia/Samarkand
+Antarctica/DumontDUrville
+Canada/Central
+Pacific/Bougainville
+Indian/Kerguelen
+Atlantic/St_Helena
+America/Mexico_City
+America/Ensenada
+America/Panama
+Africa/Kigali
+EST
+America/Merida
+Greenwich
+Indian/Mauritius
+America/Montreal
+Pacific/Kanton
+Europe/Stockholm
+Africa/Johannesburg
+America/Catamarca
+Europe/Monaco
+America/Bahia
+Asia/Dhaka
+Asia/Kuwait
+Antarctica/Syowa
+Australia/LHI
+Atlantic/Reykjavik
+Asia/Aqtobe
+US/Central
+Europe/Riga
+Europe/Nicosia
+Asia/Urumqi
+Europe/Astrakhan
+Europe/Simferopol
+Atlantic/Cape_Verde
+America/Mazatlan`;
+
+//  Clean + dedupe + validate
+const timeZones = [...new Set(
+    rawTimeZones
+        .split("\n")
+        .map(z => z.trim())
+        .filter(z => z.length > 0)
+)].filter(zone => {
+    try {
+        new Intl.DateTimeFormat("en-US", { timeZone: zone });
+        return true;
+    } catch {
+        return false;
+    }
+});
+
+function getLocalTime(zone) {
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: zone,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    }).formatToParts(now);
+
+    return {
+        h: parseInt(parts.find(p => p.type === 'hour').value),
+        m: parseInt(parts.find(p => p.type === 'minute').value),
+        s: parseInt(parts.find(p => p.type === 'second').value)
+    };
+}
+
+//  Find top 3 zones approaching 5PM
+function findBestZones() {
+    let activeZones = [];
+    let upcomingZones = [];
+
+    for (let zone of timeZones) {
+        const { h, m, s } = getLocalTime(zone);
+
+        const currentSeconds = h * 3600 + m * 60 + s;
+        const fivePM = 17 * 3600;
+        const sixPM = 18 * 3600;
+
+        //  PRIORITY: zones currently in 5PM hour
+        if (currentSeconds >= fivePM && currentSeconds < sixPM) {
+            activeZones.push({
+                zone,
+                secondsIntoHour: currentSeconds - fivePM
+            });
+        } else {
+            //  Otherwise calculate time until NEXT 5PM
+            let secondsTo5;
+
+            if (currentSeconds < fivePM) {
+                secondsTo5 = fivePM - currentSeconds;
+            } else {
+                secondsTo5 = (86400 - currentSeconds) + fivePM;
+            }
+
+            upcomingZones.push({
+                zone,
+                secondsTo5
+            });
+        }
+    }
+
+    //  If any zone is currently in 5PM hour → STAY THERE
+    if (activeZones.length > 0) {
+        activeZones.sort((a, b) => a.secondsIntoHour - b.secondsIntoHour);
+
+        const main = activeZones[0];
+
+        // fill with upcoming zones for display
+        upcomingZones.sort((a, b) => a.secondsTo5 - b.secondsTo5);
+
+        return [
+            { zone: main.zone, secondsTo5: 0 },
+            ...upcomingZones.slice(0, 2)
+        ];
+    }
+
+    //  Otherwise → find next zones approaching 5PM
+    upcomingZones.sort((a, b) => a.secondsTo5 - b.secondsTo5);
+
+    return upcomingZones.slice(0, 3);
+}
+
+//  Format countdown
+function formatTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+//  Update display
+function update() {
+    const topZones = findBestZones();
+    const best = topZones[0];
+
+    const { h, m, s } = getLocalTime(best.zone);
+
+    // Clock
+    document.getElementById("time").innerText =
+        `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+    // Location
+    document.getElementById("location").innerText =
+        best.zone.replace(/_/g, " ");
+
+    // Countdown
+    if (best.secondsTo5 === 0) {
+        document.getElementById("countdown").innerText = " IT'S 5PM ";
+    } else {
+        document.getElementById("countdown").innerText =
+            `5PM in ${formatTime(best.secondsTo5)}`;
+    }
+
+    // Top 3
+    document.getElementById("top3").innerText =
+        topZones.map((z, i) =>
+            `${i+1}. ${z.zone.replace(/_/g," ")} (${formatTime(z.secondsTo5)})`
+        ).join("\n");
+}
+
+setInterval(update, 1000);
+update();
+
+</script>
+
+</body>
+</html>
